@@ -60,6 +60,24 @@ param(
     [string]$ChatGptResponseFile
 )
 
+# Function to get a valid MSI product code (GUID) for a given application
+function Get-MsiProductCode {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$ApplicationName
+    )
+    
+    try {
+        # Simply generate a new GUID using the built-in cmdlet
+        return (New-Guid).ToString().ToUpper()
+    }
+    catch {
+        Write-Warning "Error generating MSI product code: $_"
+        # Return a random GUID as fallback using .NET method
+        return [System.Guid]::NewGuid().ToString().ToUpper()
+    }
+}
+
 # Function to convert simplified ChatGPT manifest to complete format
 function ConvertFrom-SimplifiedManifest {
     param (
@@ -208,8 +226,6 @@ Return ONLY the following JSON format, populated with correct information for $A
   },
   "Program": {
     "InstallTemplate": "powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File .\\Install.ps1",
-    "InstallCommand": "powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File .\\Install.ps1",
-    "UninstallCommand": "msiexec.exe /X \"{GUID}\" /quiet",
     "InstallExperience": "system",
     "DeviceRestartBehavior": "suppress",
     "AllowAvailableUninstall": false
@@ -542,6 +558,13 @@ if (-not (Test-Path -Path $appSourceDirectory)) {
 # Generate a new GUID for the package
 $packageGuid = [guid]::NewGuid().ToString()
 
+# Generate MSI product code if needed
+$msiProductCode = $null
+if ($SetupType -eq "MSI") {
+    $msiProductCode = Get-MsiProductCode -ApplicationName $ApplicationName
+    Write-Output "Generated MSI product code: $msiProductCode"
+}
+
 # Create the base App.json content with the structure seen in the template
 $baseJsonContent = @{
   "Application" = @{
@@ -571,8 +594,6 @@ $baseJsonContent = @{
   }
   "Program" = @{
     "InstallTemplate" = "powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File .\Install.ps1"
-    "InstallCommand" = "powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File .\Install.ps1"
-    "UninstallCommand" = "msiexec.exe /X {GUID} /quiet"
     "InstallExperience" = "system"
     "DeviceRestartBehavior" = "suppress"
     "AllowAvailableUninstall" = $false
@@ -613,6 +634,26 @@ if (-not [string]::IsNullOrEmpty($ChatGptResponseFile) -and (Test-Path -Path $Ch
         if ($simplifiedJson) {
             Write-Output "Successfully parsed ChatGPT response from file."
             $finalJsonContent = ConvertFrom-SimplifiedManifest -SimplifiedJson $simplifiedJson -ApplicationName $ApplicationName -PackageGuid $packageGuid
+            
+            # If it's an MSI, adjust the InstallCommand and UninstallCommand fields
+            if ($finalJsonContent.PackageInformation.SetupType -eq "MSI") {
+                $finalJsonContent.Program.InstallCommand = "powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File .\Install.ps1"
+                # Try to extract GUID if present in UninstallCommand
+                if ($finalJsonContent.Program.UninstallCommand -match '{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}}') {
+                    $guid = [regex]::Match($finalJsonContent.Program.UninstallCommand, '{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}}').Value
+                    $finalJsonContent.Program.UninstallCommand = "msiexec.exe /X $guid /quiet"
+                } else {
+                    $finalJsonContent.Program.UninstallCommand = "msiexec.exe /X {GUID} /quiet"
+                }
+            } else {
+                # For EXE, ensure these fields are populated
+                if (-not $finalJsonContent.Program.InstallCommand) {
+                    $finalJsonContent.Program.InstallCommand = "powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File .\Install.ps1"
+                }
+                if (-not $finalJsonContent.Program.UninstallCommand) {
+                    $finalJsonContent.Program.UninstallCommand = ".\uninstall.exe /S"
+                }
+            }
         }
         else {
             Write-Warning "Failed to parse ChatGPT response from file. Using basic template."
@@ -638,6 +679,26 @@ elseif ($UseAzureOpenAI) {
                 
                 if ($simplifiedJson) {
                     $finalJsonContent = ConvertFrom-SimplifiedManifest -SimplifiedJson $simplifiedJson -ApplicationName $ApplicationName -PackageGuid $packageGuid
+                    
+                    # If it's an MSI, adjust the InstallCommand and UninstallCommand fields
+                    if ($finalJsonContent.PackageInformation.SetupType -eq "MSI") {
+                        $finalJsonContent.Program.InstallCommand = "powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File .\Install.ps1"
+                        # Try to extract GUID if present in UninstallCommand
+                        if ($finalJsonContent.Program.UninstallCommand -match '{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}}') {
+                            $guid = [regex]::Match($finalJsonContent.Program.UninstallCommand, '{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}}').Value
+                            $finalJsonContent.Program.UninstallCommand = "msiexec.exe /X $guid /quiet"
+                        } else {
+                            $finalJsonContent.Program.UninstallCommand = "msiexec.exe /X {GUID} /quiet"
+                        }
+                    } else {
+                        # For EXE, ensure these fields are populated
+                        if (-not $finalJsonContent.Program.InstallCommand) {
+                            $finalJsonContent.Program.InstallCommand = "powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File .\Install.ps1"
+                        }
+                        if (-not $finalJsonContent.Program.UninstallCommand) {
+                            $finalJsonContent.Program.UninstallCommand = ".\uninstall.exe /S"
+                        }
+                    }
                 }
                 else {
                     Write-Warning "Failed to parse simplified format from Azure OpenAI. Using basic template."
@@ -682,8 +743,24 @@ elseif ($UseAzureOpenAI) {
                     $finalJsonContent.Information.PSPackageFactoryGuid = $packageGuid  # Keep original GUID
                     
                     $finalJsonContent.Program.InstallTemplate = $enhancedData.Program.InstallTemplate
-                    $finalJsonContent.Program.InstallCommand = $enhancedData.Program.InstallCommand
-                    $finalJsonContent.Program.UninstallCommand = $enhancedData.Program.UninstallCommand
+                    
+                    # For MSI, we set standard values for InstallCommand and UninstallCommand
+                    if ($enhancedData.PackageInformation.SetupType -eq "MSI") {
+                        $finalJsonContent.Program.InstallCommand = "powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File .\Install.ps1"
+                        # If we have a GUID, use it, otherwise use a placeholder
+                        if ($enhancedData.Program.UninstallCommand -match '{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}}') {
+                            $guid = [regex]::Match($enhancedData.Program.UninstallCommand, '{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}}').Value
+                            $finalJsonContent.Program.UninstallCommand = "msiexec.exe /X $guid /quiet"
+                        } elseif ($msiProductCode) {
+                            $finalJsonContent.Program.UninstallCommand = "msiexec.exe /X {$msiProductCode} /quiet"
+                        } else {
+                            $finalJsonContent.Program.UninstallCommand = "msiexec.exe /X {GUID} /quiet"
+                        }
+                    } else {
+                        $finalJsonContent.Program.InstallCommand = $enhancedData.Program.InstallCommand
+                        $finalJsonContent.Program.UninstallCommand = $enhancedData.Program.UninstallCommand
+                    }
+                    
                     $finalJsonContent.Program.InstallExperience = $enhancedData.Program.InstallExperience
                     $finalJsonContent.Program.DeviceRestartBehavior = $enhancedData.Program.DeviceRestartBehavior
                     $finalJsonContent.Program.AllowAvailableUninstall = $enhancedData.Program.AllowAvailableUninstall
@@ -726,6 +803,34 @@ Write-Output "App.json file created at: $appJsonPath"
 $setupFile = $finalJsonContent.PackageInformation.SetupFile
 $setupType = $finalJsonContent.PackageInformation.SetupType
 $appVersion = $finalJsonContent.PackageInformation.Version
+
+# Set InstallCommand and UninstallCommand if they don't exist yet
+if (-not $finalJsonContent.Program.InstallCommand) {
+    $finalJsonContent.Program.InstallCommand = "powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File .\Install.ps1"
+}
+
+if (-not $finalJsonContent.Program.UninstallCommand) {
+    if ($setupType -eq "MSI") {
+        if ($msiProductCode) {
+            $finalJsonContent.Program.UninstallCommand = "msiexec.exe /X {$msiProductCode} /quiet"
+        } else {
+            $finalJsonContent.Program.UninstallCommand = "msiexec.exe /X {GUID} /quiet"
+        }
+    } else {
+        $finalJsonContent.Program.UninstallCommand = ".\uninstall.exe /S"
+    }
+}
+
+# Add other standard properties if they're missing
+if (-not $finalJsonContent.Program.InstallExperience) {
+    $finalJsonContent.Program.InstallExperience = "system"
+}
+if (-not $finalJsonContent.Program.DeviceRestartBehavior) {
+    $finalJsonContent.Program.DeviceRestartBehavior = "suppress"
+}
+if (-not [bool]($finalJsonContent.Program.PSObject.Properties.Match("AllowAvailableUninstall"))) {
+    $finalJsonContent.Program.AllowAvailableUninstall = $false
+}
 
 # Create Install.json - first try with LLM if Azure OpenAI is enabled
 if ($UseAzureOpenAI -and -not [string]::IsNullOrEmpty($AzureOpenAIEndpoint) -and -not [string]::IsNullOrEmpty($AzureOpenAIKey)) {
