@@ -396,10 +396,147 @@ Format your response as valid JSON without any additional text. Replace empty va
     }
 }
 
+# Function to get Install.json template from LLM
+function Get-InstallJsonDetails {
+    param(
+        [string]$AppName,
+        [string]$SetupType,
+        [string]$SetupFile,
+        [string]$Version,
+        [string]$Endpoint,
+        [string]$ApiKey,
+        [string]$DeploymentName,
+        [string]$ApiVersion
+    )
+    
+    try {
+        # Create HTTP client
+        $client = New-Object HttpClient
+        $client.DefaultRequestHeaders.Add("api-key", $ApiKey)
+        
+        # Prepare the request URL
+        $requestUrl = "$Endpoint/openai/deployments/$DeploymentName/chat/completions?api-version=$ApiVersion"
+        
+        # Prepare the prompt
+        $systemMessage = @"
+You are an AI assistant specialized in software packaging for Microsoft Intune. 
+Your task is to provide information for creating Install.json files that will be used by the installer script.
+Focus on providing factual information only. If you're not sure about something, provide generic placeholder values.
+"@
+
+        $userMessage = @"
+I need an Install.json template for the application "$AppName". This is a $SetupType installer with setup file "$SetupFile" and version "$Version".
+Return ONLY the following JSON format, populated with correct information for $AppName`:
+
+```json
+{
+  "PackageInformation": {
+    "SetupType": "$SetupType",
+    "SetupFile": "$SetupFile",
+    "Version": "$Version"
+  },
+  "LogPath": "C:\\ProgramData\\Microsoft\\IntuneManagementExtension\\Logs",
+  "InstallTasks": {
+    "StopProcess": [],
+    "ArgumentList": ""
+  },
+  "PostInstall": {
+    "Remove": [],
+    "CopyFile": []
+  }
+}
+```
+
+For the "ArgumentList" field, provide the appropriate silent installation command line arguments for this specific application.
+If it's an MSI, typically it would be something like: "/package \"#SetupFile\" /quiet /log \"#LogPath\\#LogName.log\""
+If it's an EXE, provide the specific silent switches this application uses.
+
+For the "StopProcess" array, include any processes that should be stopped before installation.
+
+IMPORTANT: Your response should only contain the JSON object without any additional text, explanations, or formatting.
+"@
+
+        # Create request body
+        $requestBody = @{
+            messages = @(
+                @{
+                    role = "system"
+                    content = $systemMessage
+                },
+                @{
+                    role = "user"
+                    content = $userMessage
+                }
+            )
+            # No temperature or max_tokens parameters for compatibility with all models
+        } | ConvertTo-Json -Depth 10
+        
+        # Send request
+        $content = New-Object StringContent($requestBody, [Encoding]::UTF8, "application/json")
+        $response = $client.PostAsync($requestUrl, $content).Result
+        
+        if ($response.IsSuccessStatusCode) {
+            $result = $response.Content.ReadAsStringAsync().Result | ConvertFrom-Json
+            return $result.choices[0].message.content
+        }
+        else {
+            Write-Warning "Failed to get Install.json details: $($response.StatusCode) - $($response.ReasonPhrase)"
+            return $null
+        }
+    }
+    catch {
+        Write-Warning "Error calling Azure OpenAI for Install.json: $_"
+        return $null
+    }
+}
+
+# Function to create basic Install.json template
+function New-InstallJsonTemplate {
+    param(
+        [string]$SetupType,
+        [string]$SetupFile,
+        [string]$Version
+    )
+    
+    # Create a basic Install.json structure
+    $installJson = @{
+        "PackageInformation" = @{
+            "SetupType" = $SetupType
+            "SetupFile" = $SetupFile
+            "Version" = $Version
+        }
+        "LogPath" = "C:\ProgramData\Microsoft\IntuneManagementExtension\Logs"
+        "InstallTasks" = @{
+            "StopProcess" = @()
+            "ArgumentList" = ""
+        }
+        "PostInstall" = @{
+            "Remove" = @()
+            "CopyFile" = @()
+        }
+    }
+    
+    # Set default ArgumentList based on SetupType
+    if ($SetupType -eq "MSI") {
+        $installJson.InstallTasks.ArgumentList = '/package "#SetupFile" /quiet /log "#LogPath\#LogName.log"'
+    }
+    elseif ($SetupType -eq "EXE") {
+        $installJson.InstallTasks.ArgumentList = '"#SetupFile" /S'
+    }
+    
+    return $installJson
+}
+
 # Create the directory if it doesn't exist
 $appDirectory = Join-Path -Path "d:\m365\packagefactory_syd\packages\App" -ChildPath $ApplicationName
 if (-not (Test-Path -Path $appDirectory)) {
     New-Item -Path $appDirectory -ItemType Directory -Force | Out-Null
+}
+
+# Create the Source directory if it doesn't exist
+$appSourceDirectory = Join-Path -Path $appDirectory -ChildPath "Source"
+if (-not (Test-Path -Path $appSourceDirectory)) {
+    New-Item -Path $appSourceDirectory -ItemType Directory -Force | Out-Null
 }
 
 # Generate a new GUID for the package
@@ -579,8 +716,54 @@ $finalJsonContent | ConvertTo-Json -Depth 10 | Out-File -FilePath $appJsonPath -
 Write-Output "App.json file created at: $appJsonPath"
 
 # Save the raw LLM response for reference if available
-if (($UseAzureOpenAI -or $ChatGptResponseFile) -and $llmResponse) {
-    $llmResponsePath = Join-Path -Path $appDirectory -ChildPath "LlmResponse.json"
-    $llmResponse | Out-File -FilePath $llmResponsePath -Encoding utf8 -Force
-    Write-Output "LLM response saved at: $llmResponsePath"
+# if (($UseAzureOpenAI -or $ChatGptResponseFile) -and $llmResponse) {
+#     $llmResponsePath = Join-Path -Path $appDirectory -ChildPath "LlmResponse.json"
+#     # $llmResponse | Out-File -FilePath $llmResponsePath -Encoding utf8 -Force
+#     # Write-Output "LLM response saved at: $llmResponsePath"
+# }
+
+# Now create the Install.json file
+$setupFile = $finalJsonContent.PackageInformation.SetupFile
+$setupType = $finalJsonContent.PackageInformation.SetupType
+$appVersion = $finalJsonContent.PackageInformation.Version
+
+# Create Install.json - first try with LLM if Azure OpenAI is enabled
+if ($UseAzureOpenAI -and -not [string]::IsNullOrEmpty($AzureOpenAIEndpoint) -and -not [string]::IsNullOrEmpty($AzureOpenAIKey)) {
+    Write-Output "Calling Azure OpenAI to get Install.json details..."
+    $installLlmResponse = Get-InstallJsonDetails -AppName $ApplicationName -SetupType $setupType -SetupFile $setupFile -Version $appVersion -Endpoint $AzureOpenAIEndpoint -ApiKey $AzureOpenAIKey -DeploymentName $AzureOpenAIDeploymentName -ApiVersion $AzureOpenAIApiVersion
+    
+    if ($installLlmResponse) {
+        Write-Output "Successfully received Install.json details from Azure OpenAI."
+        try {
+            # Extract JSON from the response
+            $jsonMatch = [regex]::Match($installLlmResponse, '(?s)\{.*\}')
+            if ($jsonMatch.Success) {
+                $installJsonContent = $jsonMatch.Value | ConvertFrom-Json
+            }
+            else {
+                # If no JSON found, use the whole response
+                $installJsonContent = $installLlmResponse | ConvertFrom-Json
+            }
+        }
+        catch {
+            Write-Warning "Error parsing Install.json LLM response: $_"
+            Write-Warning "Creating basic Install.json template instead."
+            $installJsonContent = New-InstallJsonTemplate -SetupType $setupType -SetupFile $setupFile -Version $appVersion
+        }
+    }
+    else {
+        Write-Warning "Failed to get Install.json details from Azure OpenAI. Creating basic template."
+        $installJsonContent = New-InstallJsonTemplate -SetupType $setupType -SetupFile $setupFile -Version $appVersion
+    }
 }
+else {
+    # Create a basic Install.json if not using Azure OpenAI
+    Write-Output "Creating basic Install.json template..."
+    $installJsonContent = New-InstallJsonTemplate -SetupType $setupType -SetupFile $setupFile -Version $appVersion
+}
+
+# Save the Install.json file
+$installJsonPath = Join-Path -Path $appSourceDirectory -ChildPath "Install.json"
+$installJsonContent | ConvertTo-Json -Depth 10 | Out-File -FilePath $installJsonPath -Encoding utf8 -Force
+
+Write-Output "Install.json file created at: $installJsonPath"

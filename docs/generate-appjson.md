@@ -2,10 +2,11 @@
 
 ## Vue d'ensemble
 
-Le script `Generate-AppJsonComplete.ps1` est un outil PowerShell conçu pour générer automatiquement des fichiers `App.json` pour le packaging d'applications dans Microsoft Intune. Ces fichiers sont utilisés par le système de packaging pour créer des packages d'application déployables.
+Le script `Generate-AppJsonComplete.ps1` est un outil PowerShell conçu pour générer automatiquement des fichiers `App.json` et `Install.json` pour le packaging d'applications dans Microsoft Intune. Ces fichiers sont utilisés par le système de packaging pour créer des packages d'application déployables.
 
 Le script offre les fonctionnalités suivantes :
 - Génération d'un fichier `App.json` de base avec les paramètres standard
+- Génération d'un fichier `Install.json` dans le dossier Source pour configurer l'installation
 - Intégration avec Azure OpenAI pour compléter automatiquement les détails de l'application
 - Support pour différents formats de réponse LLM (Large Language Model)
 - Prise en charge des réponses de ChatGPT à partir de fichiers externes
@@ -15,7 +16,9 @@ Le script offre les fonctionnalités suivantes :
 - PowerShell 5.1 ou supérieur
 - Accès à Azure OpenAI Service (facultatif, pour l'enrichissement automatique)
 
-## Format du fichier App.json
+## Format des fichiers générés
+
+### Format du fichier App.json
 
 Le fichier `App.json` généré respecte la structure suivante :
 
@@ -76,6 +79,29 @@ Le fichier `App.json` généré respecte la structure suivante :
 }
 ```
 
+### Format du fichier Install.json
+
+Le fichier `Install.json` généré dans le dossier Source respecte la structure suivante :
+
+```json
+{
+  "PackageInformation": {
+    "SetupType": "",
+    "SetupFile": "",
+    "Version": ""
+  },
+  "LogPath": "C:\\ProgramData\\Microsoft\\IntuneManagementExtension\\Logs",
+  "InstallTasks": {
+    "StopProcess": [],
+    "ArgumentList": ""
+  },
+  "PostInstall": {
+    "Remove": [],
+    "CopyFile": []
+  }
+}
+```
+
 ## Utilisation
 
 ### Utilisation de base (sans LLM)
@@ -128,23 +154,29 @@ Pour générer un fichier `App.json` de base sans enrichissement LLM :
 
 ## Intégration avec Azure OpenAI
 
-Le script peut utiliser Azure OpenAI pour enrichir automatiquement le contenu du fichier `App.json`. Lorsque l'option `-UseAzureOpenAI` est spécifiée, le script envoie une demande à Azure OpenAI pour obtenir des informations détaillées sur l'application spécifiée.
+Le script peut utiliser Azure OpenAI pour enrichir automatiquement le contenu des fichiers `App.json` et `Install.json`. Lorsque l'option `-UseAzureOpenAI` est spécifiée, le script envoie une demande à Azure OpenAI pour obtenir des informations détaillées sur l'application spécifiée.
 
-### Format de requête OpenAI
+### Format de requêtes OpenAI
 
-Le script envoie une requête à Azure OpenAI en demandant des informations sur l'application dans le format JSON spécifié. Le LLM est invité à remplir tous les champs pertinents avec des informations précises pour l'application.
+Le script envoie deux types de requêtes à Azure OpenAI :
+
+1. **Requête pour App.json** : Demande des informations détaillées sur l'application dans le format JSON spécifié pour le fichier App.json.
+
+2. **Requête pour Install.json** : Demande des informations spécifiques à l'installation de l'application, notamment les arguments de ligne de commande appropriés et les processus à arrêter avant l'installation.
 
 ### Gestion des réponses
 
-Le script analyse la réponse d'Azure OpenAI et extrait les informations pertinentes pour créer ou enrichir le fichier `App.json`. Si certaines informations sont manquantes dans la réponse, le script conserve les valeurs par défaut.
+Le script analyse les réponses d'Azure OpenAI et extrait les informations pertinentes pour créer ou enrichir les fichiers JSON. Si certaines informations sont manquantes dans les réponses, le script conserve les valeurs par défaut.
 
 ## Exemple de flux de travail
 
 1. L'utilisateur exécute le script avec le nom de l'application et les informations d'authentification Azure OpenAI
-2. Le script prépare une requête au format approprié et l'envoie à Azure OpenAI
+2. Le script prépare des requêtes au format approprié et les envoie à Azure OpenAI
 3. Azure OpenAI renvoie des informations détaillées sur l'application au format JSON
-4. Le script analyse la réponse et génère un fichier `App.json` dans le répertoire approprié
-5. Le fichier `App.json` est prêt à être utilisé pour créer un package d'application pour Intune
+4. Le script analyse les réponses et génère les fichiers suivants :
+   - Un fichier `App.json` dans le répertoire principal de l'application
+   - Un fichier `Install.json` dans le sous-répertoire Source
+5. Les fichiers sont prêts à être utilisés pour créer un package d'application pour Intune
 
 ## Limitations
 
