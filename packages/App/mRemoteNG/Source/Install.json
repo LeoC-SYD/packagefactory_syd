@@ -1,0 +1,18 @@
+{
+  "PackageInformation": {
+    "SetupType": "MSI",
+    "SetupFile": "mRemoteNG.msi",
+    "Version": "1.78.21"
+  },
+  "LogPath": "C:\\ProgramData\\Microsoft\\IntuneManagementExtension\\Logs",
+  "InstallTasks": {
+    "StopProcess": [
+      "mRemoteNG"
+    ],
+    "ArgumentList": "/package \"mRemoteNG.msi\" /quiet /log \"C:\\ProgramData\\Microsoft\\IntuneManagementExtension\\Logs\\mRemoteNG_install.log\""
+  },
+  "PostInstall": {
+    "Remove": [],
+    "CopyFile": []
+  }
+}

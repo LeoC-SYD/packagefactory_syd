@@ -1,0 +1,56 @@
+{
+  "Assignments": [],
+  "Information": {
+    "Publisher": "mRemoteNG Development Team",
+    "InformationURL": "https://mremoteng.org/",
+    "Categories": [
+      "Utilities"
+    ],
+    "PSPackageFactoryGuid": "5980bca0-9e72-42d9-9323-c7629a422c9c",
+    "DisplayName": "mRemoteNG",
+    "FeaturedApp": false,
+    "PrivacyURL": "https://mremoteng.org/",
+    "Description": "mRemoteNG is a free, open source, tabbed, multi-protocol remote connections manager."
+  },
+  "Program": {
+    "UninstallCommand": "msiexec.exe /X \"{00000000-0000-0000-0000-000000000000}\" /quiet",
+    "DeviceRestartBehavior": "suppress",
+    "InstallExperience": "system",
+    "InstallTemplate": "powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File .\\Install.ps1",
+    "AllowAvailableUninstall": false,
+    "InstallCommand": "powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File .\\Install.ps1"
+  },
+  "PackageInformation": {
+    "SetupFile": "mRemoteNG-Installer-1.76.20.24615.msi",
+    "IconFile": "https://github.com/mRemoteNG/mRemoteNG/blob/d8eaba75d2ba1f0720a23d9b15a3585d5df04f9e/mRemoteNG/VisualElements_70.png",
+    "Version": "1.78.21",
+    "SetupType": "MSI",
+    "OutputFolder": "Package",
+    "SourceFolder": "Source"
+  },
+  "Supersedence": [],
+  "RequirementRule": {
+    "MinimumRequiredOperatingSystem": "W10_1809",
+    "Architecture": "x86"
+  },
+  "Dependencies": [],
+  "DetectionRule": [
+    {
+      "Type": "File",
+      "DetectionMethod": "Version",
+      "Path": "C:\\Program Files\\mRemoteNG\\",
+      "FileOrFolder": "mRemoteNG.exe",
+      "Operator": "greaterThanOrEqual",
+      "VersionValue": "1.78.21.0",
+      "Check32BitOn64System": "false"
+    }
+  ],
+  "Application": {
+    "Title": "mRemoteNG",
+    "Architecture": "x86",
+    "Filter": "Get-EvergreenApp -Name \"mRemoteNG\" | Where-Object { $_.Architecture -eq \"x86\" } | Select-Object -First 1",
+    "Language": "English",
+    "Name": "mRemoteNG"
+  },
+  "CustomRequirementRule": []
+}
