@@ -49,10 +49,10 @@
 
     .EXAMPLE
     $params = @{
-        Path        = "E:\projects\packagefactory\packages"
+        Path        = "D:\m365\packagefactory_syd\packages"
         Application = "AdobeAcrobatReaderDCMUI"
         Type        = "App"
-        WorkingPath = "E:\projects\packagefactory\output"
+        WorkingPath = "D:\m365\packagefactory_syd\output"
         Import      = $true
     }
     .\New-Win32Package.ps1 @params
@@ -81,7 +81,7 @@ param (
     [System.String] $Type = "App",
 
     [Parameter(Mandatory = $false, HelpMessage = "The path to the packages in the package factory.")]
-    [System.String] $Path = "E:\projects\packagefactory\packages",
+    [System.String] $Path = "D:\m365\packagefactory_syd\packages",
 
     [Parameter(Mandatory = $false, HelpMessage = "The manifest file that defines each package properties. Defaults to 'App.json'.")]
     [System.String] $PackageManifest = "App.json",
