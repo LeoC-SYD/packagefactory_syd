@@ -339,7 +339,7 @@ process {
                     if ($Manifest.Program.UninstallCommand -match "{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}}") {
                         $UninstallGuid = [System.Guid]::New($Matches[0])
                         if (-not($UninstallGuid.Equals($MsiGuid))) {
-                            Write-Warning -Message "Uninstall string '$($UninstallGuid.GUID)' does not match MSI package ID: '$($MsiID.GUID)'"
+                            Write-Warning -Message "Uninstall string '$($UninstallGuid.GUID)' does not match MSI package ID: '$($MsiGuid.Guid)'"
                         }
                     }
 
@@ -348,7 +348,7 @@ process {
                         if ($Rule.KeyPath -match "{\w{8}-\w{4}-\w{4}-\w{4}-\w{12}}") {
                             $DetectionGuid = [System.Guid]::New($Matches[0])
                             if (-not($DetectionGuid.Equals($MsiGuid))) {
-                                Write-Warning -Message "Detection rule registry path '$($Rule.KeyPath)' does not match MSI package ID: '$($MsiID.GUID)'"
+                                Write-Warning -Message "Detection rule registry path '$($Rule.KeyPath)' does not match MSI package ID: '$($MsiGuid.Guid)'"
                             }
                         }
                     }
