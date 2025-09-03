@@ -1,4 +1,3 @@
-#Requires -PSEdition Desktop
 #Requires -RunAsAdministrator
 <#
     Delete the key file

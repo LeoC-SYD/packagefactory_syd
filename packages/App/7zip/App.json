@@ -1,0 +1,78 @@
+{
+  "Application": {
+    "Name": "7-Zip",
+    "Filter": "Get-EvergreenApp -Name \"7Zip\" | Where-Object { $_.Type -eq \"MSI\" -and $_.Architecture -eq \"x64\" } | Select-Object -First 1",
+    "Title": "7-Zip 25.01",
+    "Language": "FR-fr",
+    "Architecture": "x64"
+  },
+  "PackageInformation": {
+    "SetupType": "MSI",
+    "SetupFile": "7z2501-x64.msi",
+    "Version": "25.01",
+    "SourceFolder": "Source",
+    "OutputFolder": "Package",
+    "IconFile": "https://7-zip.org/7ziplogo.png"
+  },
+  "Information": {
+    "DisplayName": "7-Zip 25.01 (x64)",
+    "Description": "Installe le gestionnaire d’archives 7‑Zip version 25.01 pour Windows 64 bits.",
+    "Publisher": "Igor Pavlov",
+    "InformationURL": "https://7-zip.org/",
+    "PrivacyURL": "https://github.com/ip7z/7zip/blob/main/DOC/copying.txt",
+    "Notes": "",
+    "Categories": [],
+    "PSPackageFactoryGuid": "519578ec-40d3-4ceb-aa99-20aad54bb2d2"
+  },
+  "Program": {
+    "InstallCommand": "msiexec /i \"7z2501-x64.msi\" /qn /norestart",
+    "UninstallCommand": "msiexec /x {23170F69-40C1-2702-2407-000001000000} /qn",
+    "InstallExperience": "system",
+    "DeviceRestartBehavior": "suppress",
+    "AllowAvailableUninstall": true
+  },
+  "RequirementRule": {
+    "MinimumRequiredOperatingSystem": "W10_1809",
+    "Architecture": "x64"
+  },
+  "CustomRequirementRule": [],
+  "DetectionRule": [
+      {
+          "Type": "MSI",
+          "ProductCode": "{23170F69-40C1-2702-2407-000001000000}",
+          "ProductVersionOperator": "notConfigured",
+          "ProductVersion": "25.01"
+      }
+  ],
+  "Dependencies": [],
+  "Supersedence": [],
+  "Assignments": [
+        {
+            "Type": "AllDevices",
+            "Intent": "required",
+            "Notification": "showReboot",
+            "EnableRestartGracePeriod": true,
+            "RestartGracePeriod": 1440,
+            "RestartCountDownDisplay": 15,
+            "RestartNotificationSnooze": 240,
+            "DeliveryOptimizationPriority": "foreground",
+            "AvailableTime": "2023-06-21T18:00:00Z",
+            "DeadlineTime": "",
+            "UseLocalTime": true
+        },
+        {
+            "Type": "AllUsers",
+            "Intent": "available",
+            "Notification": "showAll",
+            "EnableRestartGracePeriod": true,
+            "RestartGracePeriod": 1440,
+            "RestartCountDownDisplay": 15,
+            "RestartNotificationSnooze": 240,
+            "DeliveryOptimizationPriority": "foreground",
+            "AvailableTime": "",
+            "DeadlineTime": "",
+            "UseLocalTime": true
+        }
+    ]
+}
+

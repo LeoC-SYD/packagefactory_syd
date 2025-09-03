@@ -1,29 +1,25 @@
 {
   "Assignments": [],
   "Information": {
-    "Publisher": "mRemoteNG Development Team",
+    "Publisher": "mRemoteNG",
     "InformationURL": "https://mremoteng.org/",
-    "Categories": [
-      "Utilities"
-    ],
-    "PSPackageFactoryGuid": "5980bca0-9e72-42d9-9323-c7629a422c9c",
+    "Categories": [],
+    "PSPackageFactoryGuid": "efe0f582-4d3a-4da2-b31f-a359a7c53f7d",
     "DisplayName": "mRemoteNG",
     "FeaturedApp": false,
-    "PrivacyURL": "https://mremoteng.org/",
-    "Description": "mRemoteNG is a free, open source, tabbed, multi-protocol remote connections manager."
+    "PrivacyURL": "https://mremoteng.org/privacy",
+    "Description": "mRemoteNG is an open source, tabbed, multi-protocol remote connections manager."
   },
   "Program": {
-    "UninstallCommand": "msiexec.exe /X \"{00000000-0000-0000-0000-000000000000}\" /quiet",
+    "AllowAvailableUninstall": false,
     "DeviceRestartBehavior": "suppress",
     "InstallExperience": "system",
-    "InstallTemplate": "powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File .\\Install.ps1",
-    "AllowAvailableUninstall": false,
-    "InstallCommand": "powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File .\\Install.ps1"
+    "UninstallCommand": "msiexec.exe /X {1A2B3C4D-5E6F-7081-9A2B-C3D4E5F60708} /quiet"
   },
   "PackageInformation": {
     "SetupFile": "mRemoteNG-Installer-1.76.20.24615.msi",
-    "IconFile": "https://github.com/mRemoteNG/mRemoteNG/blob/d8eaba75d2ba1f0720a23d9b15a3585d5df04f9e/mRemoteNG/VisualElements_70.png",
-    "Version": "1.78.21",
+    "IconFile": "https://comptoir-du-libre.org/img/files/Softwares/mRemoteNG/avatar/256.png",
+    "Version": "1.78.15",
     "SetupType": "MSI",
     "OutputFolder": "Package",
     "SourceFolder": "Source"
@@ -31,7 +27,7 @@
   "Supersedence": [],
   "RequirementRule": {
     "MinimumRequiredOperatingSystem": "W10_1809",
-    "Architecture": "x86"
+    "Architecture": "x64"
   },
   "Dependencies": [],
   "DetectionRule": [
@@ -41,14 +37,14 @@
       "Path": "C:\\Program Files\\mRemoteNG\\",
       "FileOrFolder": "mRemoteNG.exe",
       "Operator": "greaterThanOrEqual",
-      "VersionValue": "1.78.21.0",
+      "VersionValue": "1.78.15.0",
       "Check32BitOn64System": "false"
     }
   ],
   "Application": {
     "Title": "mRemoteNG",
-    "Architecture": "x86",
-    "Filter": "Get-EvergreenApp -Name \"mRemoteNG\" | Where-Object { $_.Architecture -eq \"x86\" } | Select-Object -First 1",
+    "Architecture": "x64",
+    "Filter": "Get-EvergreenApp -Name \"mRemoteNG\" | Where-Object { $_.Language -eq \"en-US\" -and $_.Architecture -eq \"x64\" } | Select-Object -First 1",
     "Language": "English",
     "Name": "mRemoteNG"
   },

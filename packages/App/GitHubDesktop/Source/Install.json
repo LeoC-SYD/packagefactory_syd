@@ -1,15 +1,15 @@
 {
   "PackageInformation": {
     "SetupType": "MSI",
-    "SetupFile": "mRemoteNG.msi",
-    "Version": "1.78.15"
+    "SetupFile": "GitHubDesktop.msi",
+    "Version": "1.0.0"
   },
   "LogPath": "C:\\ProgramData\\Microsoft\\IntuneManagementExtension\\Logs",
   "InstallTasks": {
     "StopProcess": [
-      "mRemoteNG"
+      "GitHubDesktop.exe"
     ],
-    "ArgumentList": "/package \"mRemoteNG.msi\" /quiet /log \"C:\\ProgramData\\Microsoft\\IntuneManagementExtension\\Logs\\mRemoteNG.log\""
+    "ArgumentList": "msiexec /i \"GitHubDesktop.msi\" /qn /norestart /l*v \"C:\\ProgramData\\Microsoft\\IntuneManagementExtension\\Logs\\GitHubDesktop.log\""
   },
   "PostInstall": {
     "Remove": [],

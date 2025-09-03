@@ -1,0 +1,45 @@
+{
+"Application": {
+  "Name": "SophosConnect MLN",
+  "Filter": "",
+  "Title": "VPN SophosConnect",
+  "Language": "en-US",
+  "Architecture": "x64"
+},
+  "PackageInformation": {
+    "SetupType": "MSI",
+    "SetupFile": "SophosConnect_2.4.0(IPsec_and_SSLVPN).msi",
+    "Version": "2.4.0",
+    "SourceFolder": "Source",
+    "OutputFolder": "Package",
+    "IconFile": "https://silentinstallhq.com/wp-content/uploads/2023/10/Sophos-Connect.png"
+  },
+  "Information": {
+    "DisplayName": "Sophos Connect",
+    "Description": "Installe Sophos Connect",
+    "Publisher": "Sophos",
+    "PrivacyURL": "https://www.sophos.com/en-us/trust/privacy",
+    "InformationURL": "https://www.sophos.com/fr-fr.aspx/",
+    "PSPackageFactoryGuid": "92e7194e-dcc3-4b90-818f-12e44796dbba"
+  },
+  "Program": {
+    "DeviceRestartBehavior": "suppress",
+    "InstallCommand": "powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File .\\Install.ps1",
+    "InstallExperience": "system",
+    "InstallTemplate": "powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File .\\Install.ps1",
+    "UninstallCommand": "msiexec.exe /X \"{7C8E5403-53B2-4A2B-A196-75930A582369}\" /quiet"
+  },
+  "RequirementRule": {
+    "MinimumRequiredOperatingSystem": "W10_1809",
+    "Architecture": "x64"
+  },
+  "CustomRequirementRule": [],
+  "DetectionRule": [
+    {
+      "Type": "MSI",
+      "ProductCode": "{7C8E5403-53B2-4A2B-A196-75930A582369}",
+      "ProductVersionOperator": "notConfigured",
+      "ProductVersion": ""
+    }
+  ]
+}

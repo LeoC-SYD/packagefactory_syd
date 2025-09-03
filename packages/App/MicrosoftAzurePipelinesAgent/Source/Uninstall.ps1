@@ -1,4 +1,3 @@
-#Requires -PSEdition Desktop
 #Requires -RunAsAdministrator
 <#
     Uses Evergreen to download and install Azure Devops Pipeline agent

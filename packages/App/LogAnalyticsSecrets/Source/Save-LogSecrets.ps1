@@ -1,4 +1,3 @@
-#Requires -PSEdition Desktop
 #Requires -RunAsAdministrator
 <#
     Encrypts secrets and saves to XML

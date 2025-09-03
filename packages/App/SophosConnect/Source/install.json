@@ -1,0 +1,21 @@
+{
+  "PackageInformation": {
+    "SetupType": "MSI",
+    "SetupFile": "SophosConnect_2.4.0(IPsec_and_SSLVPN).msi",
+    "Version": "2.4"
+  },
+  "LogPath": "C:\\ProgramData\\Microsoft\\IntuneManagementExtension\\Logs",
+  "InstallTasks": {
+    "ArgumentList": "/package \"#SetupFile\" ALLUSERS=1 /quiet /log \"#LogPath\\#LogName.log\"",
+    "Wait": 30
+  },
+  "PostInstall": {
+    "Remove": [],
+    "CopyFile": [
+      {
+        "Source": "milano.pro",
+        "Destination": "C:\\Program Files (x86)\\Sophos\\Connect\\import\\milano.pro"
+      }
+    ]
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "PackageInformation": {
+    "OutputFolder": "Package",
+    "SetupType": "MSI",
+    "SourceFolder": "Source",
+    "Filter": "Get-EvergreenApp -Name \"GitHubDesktop\" | Where-Object { $_.Type -eq 'msi' -and $_.Architecture -eq 'x64' } | Select-Object -First 1",
+    "SetupFile": "GitHubDesktopSetup-x64.msi",
+    "Version": "3.4.20",
+    "IconFile": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Github-desktop-logo-symbol.svg/128px-Github-desktop-logo-symbol.svg.png"
+  },
+  "Information": {
+    "Description": "Installs GitHubDesktop 3.4.20",
+    "FeaturedApp": false,
+    "DisplayName": "GitHubDesktop 3.4.20 x64",
+    "Publisher": "GitHub, Inc.",
+    "Categories": [],
+    "PSPackageFactoryGuid": "fbef1d28-ea73-4b22-9ba9-d73751c9c828",
+    "InformationURL": ""
+  },
+  "Program": {
+    "InstallExperience": "system",
+    "UninstallCommand": "msiexec.exe /X {7A142F98-C46A-4A89-877F-72ADB831B15A} /quiet",
+    "AllowAvailableUninstall": false,
+    "InstallTemplate": "powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File .\\Install.ps1",
+    "DeviceRestartBehavior": "suppress",
+    "InstallCommand": "powershell.exe -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File .\\Install.ps1"
+  },
+  "RequirementRule": {
+    "MinimumRequiredOperatingSystem": "W10_1809",
+    "Architecture": "x64"
+  },
+  "CustomRequirementRule": [],
+  "DetectionRule": [
+    {
+      "ProductVersionOperator": "notConfigured",
+      "VersionValue": "3.4.20",
+      "ProductVersion": "3.4.20",
+      "DetectionMethod": "VersionComparison",
+      "Type": "MSI",
+      "Check32BitOn64System": null,
+      "Operator": null,
+      "ProductCode": "{7A142F98-C46A-4A89-877F-72ADB831B15A}",
+      "FileOrFolder": null,
+      "Path": null
+    }
+  ],
+  "Dependencies": [],
+  "Supersedence": [],
+  "Assignments": []
+}
